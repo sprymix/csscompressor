@@ -11,6 +11,9 @@
 ##
 
 
+__all__ = ('compress',)
+
+
 import re
 
 
@@ -97,7 +100,7 @@ _colors_map = {
 _colors_re = re.compile(r'(:|\s)' + '(\\#(' + '|'.join(_colors_map.keys()) + '))' + r'(;|})', re.I)
 
 
-def extract_data_urls(css, preserved_tokens):
+def _extract_data_urls(css, preserved_tokens):
     max_idx = len(css) - 1
     append_idx = 0
     sb = []
@@ -140,7 +143,7 @@ def extract_data_urls(css, preserved_tokens):
     return ''.join(sb)
 
 
-def compress_rgb_calls(css):
+def _compress_rgb_calls(css):
     # Shorten colors from rgb(51,102,153) to #336699
     # This makes it more likely that it'll get further compressed in the next step.
     def _replace(match):
@@ -157,7 +160,7 @@ def compress_rgb_calls(css):
     return _rgb_re.sub(_replace, css)
 
 
-def compress_hex_colors(css):
+def _compress_hex_colors(css):
     # Shorten colors from #AABBCC to #ABC. Note that we want to make sure
     # the color is not preceded by either ", " or =. Indeed, the property
     #     filter: chroma(color="#FFFFFF");
@@ -208,7 +211,7 @@ def compress(css, *, max_linelen=0):
     total_len = len(css)
 
     preserved_tokens = []
-    css = extract_data_urls(css, preserved_tokens)
+    css = _extract_data_urls(css, preserved_tokens)
 
     # Collect all comments blocks...
     comments = []
@@ -375,8 +378,8 @@ def compress(css, *, max_linelen=0):
     # Replace 0.6 to .6, but only when preceded by : or a white-space
     css = _point_float_re.sub(r'\1.\2', css)
 
-    css = compress_rgb_calls(css)
-    css = compress_hex_colors(css)
+    css = _compress_rgb_calls(css)
+    css = _compress_hex_colors(css)
 
     # Replace #f00 -> red; other short color keywords
     css = _colors_re.sub(lambda match: match.group(1) + _colors_map[match.group(3).lower()] +
