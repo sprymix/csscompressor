@@ -52,7 +52,7 @@ _space_after_re = re.compile(r'([!{}:;>+\(\[,])\s+')
 
 _semi_re = re.compile(r';+}')
 
-_zero_fmt_spec_re = re.compile(r'''(^|[^0-9])(?:0?\.)?0
+_zero_fmt_spec_re = re.compile(r'''(\s|:|\(|,)(?:0?\.)?0
                                     (?:px|em|%|in|cm|mm|pc|pt|ex|deg|g?rad|m?s|k?hz)''',
                                re.I | re.X)
 

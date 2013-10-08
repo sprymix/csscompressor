@@ -6,28 +6,11 @@
 ##
 
 
-from csscompressor import compress
+from .base import BaseTest
 
 
-class TestYUI:
+class TestYUI(BaseTest):
     """YUI-Compressor test-suite"""
-
-    def _test(self, input, output):
-        result = compress(input)
-        if result != output.strip():
-            print()
-            print('CSM', repr(result))
-            print()
-            print('YUI', repr(output))
-            print()
-
-            # import difflib
-            # d = difflib.Differ()
-            # diff = list(d.compare(result, output.strip()))
-            # from pprint import pprint
-            # pprint(diff)
-
-            assert False
 
     def test_yui_background_position(self):
         input = """
