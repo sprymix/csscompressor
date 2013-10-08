@@ -17,8 +17,9 @@ __all__ = ('compress',)
 import re
 
 
-_url_re = re.compile(r'''url\s*\(\s*(['"]?)data\:''', re.I)
-_calc_re = re.compile(r'calc\s*\(', re.I)
+_url_re = re.compile(r'''(url)\s*\(\s*(['"]?)data\:''', re.I)
+_calc_re = re.compile(r'(calc)\s*\(', re.I)
+_hsl_re = re.compile(r'(hsl|hsla)\s*\(', re.I)
 _ws_re = re.compile(r'\s+')
 _str_re = re.compile(r'''("([^\\"]|\\.|\\)*")|('([^\\']|\\.|\\)*')''')
 _yui_comment_re = re.compile(r'___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_(?P<num>\d+)___')
@@ -101,15 +102,16 @@ _colors_map = {
 _colors_re = re.compile(r'(:|\s)' + '(\\#(' + '|'.join(_colors_map.keys()) + '))' + r'(;|})', re.I)
 
 
-def _preserve_call_tokens(css, name, regexp, preserved_tokens, *, remove_ws=False):
+def _preserve_call_tokens(css, regexp, preserved_tokens, *, remove_ws=False):
     max_idx = len(css) - 1
     append_idx = 0
     sb = []
 
     for match in regexp.finditer(css):
+        name = match.group(1)
         start_idx = match.start(0) + len(name) + 1 # "len" of "url("
 
-        term = match.group(1) if match.lastindex else None
+        term = match.group(2) if match.lastindex > 1 else None
         if not term:
             term = ')'
 
@@ -215,8 +217,9 @@ def compress(css, *, max_linelen=0):
     total_len = len(css)
 
     preserved_tokens = []
-    css = _preserve_call_tokens(css, 'url', _url_re, preserved_tokens, remove_ws=True)
-    css = _preserve_call_tokens(css, 'calc', _calc_re, preserved_tokens, remove_ws=False)
+    css = _preserve_call_tokens(css, _url_re, preserved_tokens, remove_ws=True)
+    css = _preserve_call_tokens(css, _calc_re, preserved_tokens, remove_ws=False)
+    css = _preserve_call_tokens(css, _hsl_re, preserved_tokens, remove_ws=True)
 
     # Collect all comments blocks...
     comments = []

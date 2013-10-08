@@ -41,3 +41,18 @@ class Tests(BaseTest):
         output = '''.issue-59{width:100%;width:-webkit-calc(100% + 30px);width:-moz-calc(100% + 30px);width:calc(100% + 30px)}'''
 
         self._test(input, output)
+
+    def test_issue_81(self):
+        # https://github.com/yui/yuicompressor/issues/81
+
+        input = '''
+            .SB-messages .SB-message a {
+                color: rgb(185, 99, 117);
+                border-bottom: 1px dotted text-shadow: 0 1px 0 hsl(0, 0%, 0%);
+                text-shadow: 0 1px 0 hsla(0, 0%, 0%, 1);
+            }
+        '''
+
+        output = '.SB-messages .SB-message a{color:#b96375;border-bottom:1px dotted text-shadow:0 1px 0 hsl(0,0%,0%);text-shadow:0 1px 0 hsla(0,0%,0%,1)}'
+
+        self._test(input, output)
