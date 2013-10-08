@@ -102,7 +102,7 @@ _colors_map = {
 _colors_re = re.compile(r'(:|\s)' + '(\\#(' + '|'.join(_colors_map.keys()) + '))' + r'(;|})', re.I)
 
 
-def _preserve_call_tokens(css, regexp, preserved_tokens, *, remove_ws=False):
+def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
     max_idx = len(css) - 1
     append_idx = 0
     sb = []
@@ -212,7 +212,7 @@ def _compress_hex_colors(css):
     return ''.join(buf)
 
 
-def compress(css, *, max_linelen=0):
+def compress(css, max_linelen=0):
     start_idx = end_idx = 0
     total_len = len(css)
 
