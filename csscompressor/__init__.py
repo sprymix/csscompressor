@@ -312,6 +312,7 @@ def compress(css, *, max_linelen=0):
 
     css = _spaces2_re.sub(lambda match: match.group(1), css)
 
+    # Restore spaces for !important
     css = css.replace('!important', ' !important');
 
     # bring back the colon
@@ -397,6 +398,27 @@ def compress(css, *, max_linelen=0):
 
     # Add "\" back to fix Opera -o-device-pixel-ratio query
     css = css.replace('___YUI_QUERY_FRACTION___', '/')
+
+    # Some source control tools don't like it when files containing lines longer
+    # than, say 8000 characters, are checked in. The linebreak option is used in
+    # that case to split long lines after a specific column.
+    if max_linelen and len(css) > max_linelen:
+        buf = []
+        start_pos = 0
+        while True:
+            buf.append(css[start_pos:start_pos + max_linelen])
+            start_pos += max_linelen
+            while start_pos < len(css):
+                if css[start_pos] == '}':
+                    buf.append('}\n')
+                    start_pos += 1
+                    break
+                else:
+                    buf.append(css[start_pos])
+                    start_pos += 1
+            if start_pos >= len(css):
+                break
+        css = ''.join(buf)
 
     # Replace multiple semi-colons in a row by a single one
     # See SF bug #1980989
