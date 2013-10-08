@@ -133,7 +133,7 @@ def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
             if remove_ws:
                 token = _ws_re.sub('', token)
 
-            preserver = ('{}(___YUICSSMIN_PRESERVED_TOKEN_{}___)'
+            preserver = ('{0}(___YUICSSMIN_PRESERVED_TOKEN_{1}___)'
                                     .format(name, len(preserved_tokens)))
 
             preserved_tokens.append(token)
@@ -236,7 +236,7 @@ def compress(css, max_linelen=0):
         comments.append(token)
 
         css = (css[:start_idx + 2] +
-               '___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{}___'.format(len(comments)-1) +
+               '___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{0}___'.format(len(comments)-1) +
                css[end_idx:])
 
         start_idx += 2
@@ -257,7 +257,7 @@ def compress(css, max_linelen=0):
 
         preserved_tokens.append(token)
         return (quote +
-                '___YUICSSMIN_PRESERVED_TOKEN_{}___'.format(len(preserved_tokens)-1) +
+                '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.format(len(preserved_tokens)-1) +
                 quote)
 
     css = _str_re.sub(_replace, css)
@@ -265,13 +265,13 @@ def compress(css, max_linelen=0):
     # strings are safe, now wrestle the comments
     comments_iter = iter(comments)
     for i, token in enumerate(comments_iter):
-        placeholder = "___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{}___".format(i)
+        placeholder = "___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{0}___".format(i)
 
         # ! in the first position of the comment means preserve
         # so push to the preserved tokens while stripping the !
         if token.startswith('!'):
             preserved_tokens.append(token)
-            css = css.replace(placeholder, '___YUICSSMIN_PRESERVED_TOKEN_{}___'.
+            css = css.replace(placeholder, '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.
                               format(len(preserved_tokens)-1))
             continue
 
@@ -280,14 +280,14 @@ def compress(css, max_linelen=0):
         if token.endswith('\\'):
             preserved_tokens.append('\\')
             css = css.replace(placeholder,
-                              '___YUICSSMIN_PRESERVED_TOKEN_{}___'.format(len(preserved_tokens)-1))
+                              '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.format(len(preserved_tokens)-1))
 
             # attn: advancing the loop
             next(comments_iter)
 
             preserved_tokens.append('')
-            css = css.replace('___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{}___'.format(i+1),
-                              '___YUICSSMIN_PRESERVED_TOKEN_{}___'.format(len(preserved_tokens)-1))
+            css = css.replace('___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{0}___'.format(i+1),
+                              '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.format(len(preserved_tokens)-1))
 
             continue
 
@@ -299,11 +299,11 @@ def compress(css, max_linelen=0):
                 if css[start_idx-3] == '>':
                     preserved_tokens.append('')
                     css = css.replace(placeholder,
-                                      '___YUICSSMIN_PRESERVED_TOKEN_{}___'.
+                                      '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.
                                       format(len(preserved_tokens)-1))
 
         # in all other cases kill the comment
-        css = css.replace('/*{}*/'.format(placeholder), '')
+        css = css.replace('/*{0}*/'.format(placeholder), '')
 
     # Normalize all whitespace strings to single spaces. Easier to work with that way.
     css = _ws_re.sub(' ', css)
@@ -312,7 +312,7 @@ def compress(css, max_linelen=0):
         token = match.group(1)
         preserved_tokens.append(token);
         return ('filter:progid:DXImageTransform.Microsoft.Matrix(' +
-                '___YUICSSMIN_PRESERVED_TOKEN_{}___);'.format(len(preserved_tokens)-1))
+                '___YUICSSMIN_PRESERVED_TOKEN_{0}___);'.format(len(preserved_tokens)-1))
     css = _ie_matrix_re.sub(_replace, css)
 
     # Remove the spaces before the things that should not have spaces before them.
@@ -331,7 +331,7 @@ def compress(css, max_linelen=0):
 
     # retain space for special IE6 cases
     css = _ie6special_re.sub(
-                lambda match: ':first-{} {}'.format(match.group(1).lower(), match.group(2)),
+                lambda match: ':first-{0} {1}'.format(match.group(1).lower(), match.group(2)),
                 css)
 
     # no space after the end of a preserved comment
@@ -437,7 +437,7 @@ def compress(css, max_linelen=0):
 
     # restore preserved comments and strings
     for i, token in reversed(tuple(enumerate(preserved_tokens))):
-        css = css.replace('___YUICSSMIN_PRESERVED_TOKEN_{}___'.format(i), token)
+        css = css.replace('___YUICSSMIN_PRESERVED_TOKEN_{0}___'.format(i), token)
 
     css = css.strip()
 
