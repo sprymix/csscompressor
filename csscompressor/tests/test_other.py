@@ -6,7 +6,7 @@
 ##
 
 
-from .base import BaseTest
+from csscompressor.tests.base import BaseTest
 
 
 class Tests(BaseTest):
