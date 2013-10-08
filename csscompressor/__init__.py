@@ -18,6 +18,7 @@ import re
 
 
 _url_re = re.compile(r'''url\s*\(\s*(['"]?)data\:''', re.I)
+_calc_re = re.compile(r'calc\s*\(', re.I)
 _ws_re = re.compile(r'\s+')
 _str_re = re.compile(r'''("([^\\"]|\\.|\\)*")|('([^\\']|\\.|\\)*')''')
 _yui_comment_re = re.compile(r'___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_(?P<num>\d+)___')
@@ -100,15 +101,15 @@ _colors_map = {
 _colors_re = re.compile(r'(:|\s)' + '(\\#(' + '|'.join(_colors_map.keys()) + '))' + r'(;|})', re.I)
 
 
-def _extract_data_urls(css, preserved_tokens):
+def _preserve_call_tokens(css, name, regexp, preserved_tokens, *, remove_ws=False):
     max_idx = len(css) - 1
     append_idx = 0
     sb = []
 
-    for match in _url_re.finditer(css):
-        start_idx = match.start(0) + 4 # "len" of "url("
-        term = match.group(1)
+    for match in regexp.finditer(css):
+        start_idx = match.start(0) + len(name) + 1 # "len" of "url("
 
+        term = match.group(1) if match.lastindex else None
         if not term:
             term = ')'
 
@@ -126,9 +127,13 @@ def _extract_data_urls(css, preserved_tokens):
 
         if found_term:
             token = css[start_idx:end_idx]
-            token = _ws_re.sub('', token)
 
-            preserver = 'url(___YUICSSMIN_PRESERVED_TOKEN_{}___)'.format(len(preserved_tokens))
+            if remove_ws:
+                token = _ws_re.sub('', token)
+
+            preserver = ('{}(___YUICSSMIN_PRESERVED_TOKEN_{}___)'
+                                    .format(name, len(preserved_tokens)))
+
             preserved_tokens.append(token)
             sb.append(preserver)
 
@@ -198,7 +203,6 @@ def _compress_hex_colors(css):
                 buf.append('#' + (match.group(2) + match.group(3) + match.group(4) +
                                   match.group(5) + match.group(6) + match.group(7)).lower())
 
-
         index = match.end(7)
 
     buf.append(css[index:])
@@ -211,7 +215,8 @@ def compress(css, *, max_linelen=0):
     total_len = len(css)
 
     preserved_tokens = []
-    css = _extract_data_urls(css, preserved_tokens)
+    css = _preserve_call_tokens(css, 'url', _url_re, preserved_tokens, remove_ws=True)
+    css = _preserve_call_tokens(css, 'calc', _calc_re, preserved_tokens, remove_ws=False)
 
     # Collect all comments blocks...
     comments = []
