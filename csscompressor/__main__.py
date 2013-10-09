@@ -11,7 +11,8 @@ import csscompressor
 
 
 def _get_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+                description='CSS Compressor {}'.format(csscompressor.__version__))
 
     parser.add_argument('input', nargs='+', type=str,
                         help='File(s) to compress')

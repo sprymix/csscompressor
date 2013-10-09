@@ -18,7 +18,7 @@ except ImportError:
 
 setup(
     name='csscompressor',
-    version='0.9.0',
+    version='0.9.1',
     url='http://github.com/sprymix/csscompressor',
     license='BSD',
     author='Yury Selivanov',
