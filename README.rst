@@ -15,6 +15,12 @@ Usage
     ... ''')
     'your css{content:"!"}'
 
+Or, if you want to use it from command line:
+
+.. code::
+
+    $ python3 -m csscompressor --help
+
 
 Compatibility
 =============

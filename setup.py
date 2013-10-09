@@ -9,6 +9,13 @@ finally:
     f.close()
 
 
+deps = []
+try:
+    import argparse
+except ImportError:
+    deps.append('argparse')
+
+
 setup(
     name='csscompressor',
     version='0.9.0',
@@ -24,9 +31,13 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 2',
-        'Topic :: Text Processing :: General'
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2.6',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: Text Processing :: General',
+        'Topic :: Utilities'
     ],
     packages=['csscompressor', 'csscompressor.tests'],
+    install_requires=deps,
     **extra
 )
