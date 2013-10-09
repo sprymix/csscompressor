@@ -22,3 +22,5 @@
 /build
 __pycache__/
 .d8_history
+csscompressor.egg-info/
+dist/
