@@ -12,7 +12,7 @@
 
 
 __all__ = ('compress',)
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 
 import re
@@ -121,30 +121,30 @@ def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
         while not found_term and (end_idx + 1) <= max_idx:
             end_idx = css.find(term, end_idx + 1)
 
-            if end_idx > 0 and css[end_idx - 1] != '\\':
-                found_term = True
-                if term != ')':
-                    end_idx = css.find(')', end_idx)
+            if end_idx > 0:
+                if css[end_idx - 1] != '\\':
+                    found_term = True
+                    if term != ')':
+                        end_idx = css.find(')', end_idx)
+            else:
+                raise ValueError('malformed css')
 
         sb.append(css[append_idx:match.start(0)])
 
-        if found_term:
-            token = css[start_idx:end_idx]
+        assert found_term
 
-            if remove_ws:
-                token = _ws_re.sub('', token)
+        token = css[start_idx:end_idx]
 
-            preserver = ('{0}(___YUICSSMIN_PRESERVED_TOKEN_{1}___)'
-                                    .format(name, len(preserved_tokens)))
+        if remove_ws:
+            token = _ws_re.sub('', token)
 
-            preserved_tokens.append(token)
-            sb.append(preserver)
+        preserver = ('{0}(___YUICSSMIN_PRESERVED_TOKEN_{1}___)'
+                                .format(name, len(preserved_tokens)))
 
-            append_idx = end_idx + 1
+        preserved_tokens.append(token)
+        sb.append(preserver)
 
-        else:
-            sb.append(css[match.start(0), match.end(0)])
-            append_id = match.end(0)
+        append_idx = end_idx + 1
 
     sb.append(css[append_idx:])
 
@@ -213,7 +213,7 @@ def _compress_hex_colors(css):
     return ''.join(buf)
 
 
-def compress(css, max_linelen=0):
+def _compress(css, max_linelen=0):
     start_idx = end_idx = 0
     total_len = len(css)
 
@@ -229,16 +229,18 @@ def compress(css, max_linelen=0):
         if start_idx < 0:
             break
 
+        suffix = ''
         end_idx = css.find('*/', start_idx + 2)
         if end_idx < 0:
             end_idx = total_len
+            suffix = '*/'
 
         token = css[start_idx + 2:end_idx]
         comments.append(token)
 
         css = (css[:start_idx + 2] +
                '___YUICSSMIN_PRESERVE_CANDIDATE_COMMENT_{0}___'.format(len(comments)-1) +
-               css[end_idx:])
+               css[end_idx:] + suffix)
 
         start_idx += 2
 
@@ -411,9 +413,6 @@ def compress(css, max_linelen=0):
     # Add "\" back to fix Opera -o-device-pixel-ratio query
     css = css.replace('___YUI_QUERY_FRACTION___', '/')
 
-    # Some source control tools don't like it when files containing lines longer
-    # than, say 8000 characters, are checked in. The linebreak option is used in
-    # that case to split long lines after a specific column.
     if max_linelen and len(css) > max_linelen:
         buf = []
         start_pos = 0
@@ -436,10 +435,103 @@ def compress(css, max_linelen=0):
     # See SF bug #1980989
     css = _many_semi_re.sub(';', css)
 
+    return css, preserved_tokens
+
+
+def _apply_preserved(css, preserved_tokens):
     # restore preserved comments and strings
     for i, token in reversed(tuple(enumerate(preserved_tokens))):
         css = css.replace('___YUICSSMIN_PRESERVED_TOKEN_{0}___'.format(i), token)
 
     css = css.strip()
-
     return css
+
+
+def compress(css, max_linelen=0):
+    """Compress given CSS stylesheet.
+
+    Parameters:
+
+    - css : str
+        An str with CSS rules.
+
+    - max_linelen : int = 0
+        Some source control tools don't like it when files containing lines longer
+        than, say 8000 characters, are checked in. This option is used in
+        that case to split long lines after a specific column.
+
+    Returns a ``str`` object with compressed CSS.
+    """
+
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css = _apply_preserved(css, preserved_tokens)
+    return css
+
+
+def compress_partitioned(css,
+                         max_linelen=0,
+                         max_rules_per_file=4000):
+    """Compress given CSS stylesheet into a set of files.
+
+    Parameters:
+
+    - max_linelen : int = 0
+        Has the same meaning as for "compress()" function.
+
+    - max_rules_per_file : int = 0
+        Internet Explorers <= 9 have an artificial max number of rules per CSS
+        file (4096; http://blogs.msdn.com/b/ieinternals/archive/2011/05/14/10164546.aspx)
+        When ``max_rules_per_file`` is a positive number, the function *always* returns
+        a list of ``str`` objects, each limited to contain less than the passed number
+        of rules.
+
+    Always returns a ``list`` of ``str`` objects with compressed CSS.
+    """
+
+    assert max_rules_per_file > 0
+
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+
+    bufs = []
+    buf = []
+    rules = 0
+    while css:
+        if rules >= max_rules_per_file:
+            bufs.append(''.join(buf))
+            rules = 0
+            buf = []
+
+        nested = 0
+        while True:
+            op_idx = css.find('{')
+            cl_idx = css.find('}')
+
+            if cl_idx < 0:
+                raise ValueError('malformed CSS: non-balanced curly-braces')
+
+            if op_idx < 0 or cl_idx < op_idx: # ... } ... { ...
+                nested -= 1
+
+                if nested < 0:
+                    raise ValueError('malformed CSS: non-balanced curly-braces')
+
+                buf.append(css[:cl_idx+1])
+                css = css[cl_idx+1:]
+
+                if not nested: # closing rules
+                    break
+
+            else: # ... { ... } ...
+                nested += 1
+
+                rule_line = css[:op_idx+1]
+                buf.append(rule_line)
+                css = css[op_idx+1:]
+
+                rules += rule_line.count(',') + 1
+
+    bufs.append(''.join(buf))
+
+    bufs = [_apply_preserved(buf, preserved_tokens) for buf in bufs]
+
+    return bufs
