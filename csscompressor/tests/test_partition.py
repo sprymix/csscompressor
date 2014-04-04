@@ -108,3 +108,31 @@ class Tests(unittest.TestCase):
         output = compress_partitioned(input, max_rules_per_file=2)
         assert output == ['a,a1,a2{color:red}', 'b,b2,b3{color:red}',
                           'c,c3,c4,c5{color:red}', 'd{color:red}']
+
+    def test_partition_8(self):
+        input = '''
+            @media{
+                a {p: 1}
+                b {p: 2}
+                x {p: 2}
+            }
+            @media{
+                c {p: 1}
+                d {p: 2}
+                y {p: 2}
+            }
+            @media{
+                e {p: 1}
+                f {p: 2}
+                z {p: 2}
+            }
+            z {p: 2}
+        '''
+
+        # carefully pick 'max_linelen' to have a trailing '\n' after
+        # '_compress' call
+        output = compress_partitioned(input, max_rules_per_file=2, max_linelen=6)
+        assert output == ['@media{a{p:1}\nb{p:2}x{p:2}\n}',
+                          '@media{c{p:1}\nd{p:2}y{p:2}\n}',
+                          '@media{e{p:1}\nf{p:2}z{p:2}\n}',
+                          'z{p:2}']

@@ -491,6 +491,7 @@ def compress_partitioned(css,
     assert max_rules_per_file > 0
 
     css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css = css.strip()
 
     bufs = []
     buf = []
