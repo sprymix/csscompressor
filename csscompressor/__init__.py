@@ -11,8 +11,8 @@
 ##
 
 
-__all__ = ('compress',)
-__version__ = '0.9.2'
+__all__ = ('compress', 'compress_partitioned')
+__version__ = '0.9.3'
 
 
 import re
