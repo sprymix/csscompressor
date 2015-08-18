@@ -68,6 +68,8 @@ _trip_0_re = re.compile(r':0 0 0(;|})')
 _coup_0_re = re.compile(r':0 0(;|})')
 
 _point_float_re = re.compile(r'(:|\s)0+\.(\d+)')
+_point_float_neg_re = re.compile(r'(:|\s)-0+\.(\d+)')
+_point_float_pos_re = re.compile(r'(:|\s)\+(\d+)+\.(\d+)')
 
 _border_re = re.compile(r'''(border|border-top|border-right|border-bottom|
                                 border-left|outline|background):none(;|})''', re.I | re.X)
@@ -318,6 +320,9 @@ def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
                 '___YUICSSMIN_PRESERVED_TOKEN_{0}___);'.format(len(preserved_tokens)-1))
     css = _ie_matrix_re.sub(_replace, css)
 
+    # remove + sign where it is before a float +0.1 +2.34 
+    css = _point_float_pos_re.sub(r'\1\2.\3', css)
+
     # Remove the spaces before the things that should not have spaces before them.
     # But, be careful not to turn "p :link {...}" into "p:link{...}"
     # Swap out any pseudo-class colons with the token, and then swap back.
@@ -388,6 +393,8 @@ def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
 
     # Replace 0.6 to .6, but only when preceded by : or a white-space
     css = _point_float_re.sub(r'\1.\2', css)
+    # Replace -0.6 to -.6, but only when preceded by : or a white-space
+    css = _point_float_neg_re.sub(r'\1-.\2', css)
 
     css = _compress_rgb_calls(css)
     css = _compress_hex_colors(css)
