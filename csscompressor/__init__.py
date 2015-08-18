@@ -213,7 +213,7 @@ def _compress_hex_colors(css):
     return ''.join(buf)
 
 
-def _compress(css, max_linelen=0):
+def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
     start_idx = end_idx = 0
     total_len = len(css)
 
@@ -272,7 +272,7 @@ def _compress(css, max_linelen=0):
 
         # ! in the first position of the comment means preserve
         # so push to the preserved tokens while stripping the !
-        if token.startswith('!'):
+        if preserve_exclamation_comments and token.startswith('!'):
             preserved_tokens.append(token)
             css = css.replace(placeholder, '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.
                               format(len(preserved_tokens)-1))
@@ -447,7 +447,7 @@ def _apply_preserved(css, preserved_tokens):
     return css
 
 
-def compress(css, max_linelen=0):
+def compress(css, max_linelen=0, preserve_exclamation_comments=True):
     """Compress given CSS stylesheet.
 
     Parameters:
@@ -463,14 +463,15 @@ def compress(css, max_linelen=0):
     Returns a ``str`` object with compressed CSS.
     """
 
-    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen, preserve_exclamation_comments=preserve_exclamation_comments)
     css = _apply_preserved(css, preserved_tokens)
     return css
 
 
 def compress_partitioned(css,
                          max_linelen=0,
-                         max_rules_per_file=4000):
+                         max_rules_per_file=4000,
+                         preserve_exclamation_comments=True):
     """Compress given CSS stylesheet into a set of files.
 
     Parameters:
@@ -490,7 +491,7 @@ def compress_partitioned(css,
 
     assert max_rules_per_file > 0
 
-    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen, preserve_exclamation_comments=preserve_exclamation_comments)
     css = css.strip()
 
     bufs = []
