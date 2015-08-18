@@ -8,8 +8,10 @@
 
 from csscompressor import compress
 
+import unittest
 
-class BaseTest:
+
+class BaseTest(unittest.TestCase):
     def _test(self, input, output):
         result = compress(input)
         if result != output.strip():
