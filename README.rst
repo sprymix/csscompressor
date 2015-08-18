@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/sprymix/csscompressor.svg?branch=master
+    :target: https://travis-ci.org/sprymix/csscompressor
+
+
 Almost exact port of YUI CSS Compressor.
 Passes all original unittests.
 
