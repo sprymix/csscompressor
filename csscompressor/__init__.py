@@ -6,13 +6,14 @@
 # Author: Isaac Schlueter - http://foohack.com/
 # Author: Stoyan Stefanov - http://phpied.com/
 # Contributor: Dan Beam - http://danbeam.org/
+# Contributor: w.Tayyeb - http://tayyeb.info/
 # Portions Copyright (c) 2011-2013 Yahoo! Inc.  All rights reserved.
 # LICENSE: BSD (revised)
 ##
 
 
 __all__ = ('compress', 'compress_partitioned')
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 
 
 import re
