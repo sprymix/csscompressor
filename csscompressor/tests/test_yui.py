@@ -1044,6 +1044,30 @@ class TestYUI(BaseTest):
 
         self._test(input, output)
 
+    def test_yui_neg_decimals(self):
+        input = """
+            ::selection {
+              margin: -0.6px -0.333pt -1.2em -8.8cm;
+            }
+
+        """
+
+        output = """::selection{margin:-.6px -.333pt -1.2em -8.8cm}"""
+
+        self._test(input, output)
+
+    def test_yui_pos_decimals(self):
+        input = """
+            ::selection {
+              margin: +0.6px +0.333pt +1.2em +8.8cm;
+            }
+
+        """
+
+        output = """::selection{margin:.6px .333pt 1.2em 8.8cm}"""
+
+        self._test(input, output)
+
     def test_yui_dollar_header(self):
         input = """
 /*!
@@ -1401,6 +1425,29 @@ pre-
 serve! */"""
 
         self._test(input, output)
+
+    def test_yui_remove_special_comments(self):
+        input = """
+/*!************88****
+ Preserving comments
+    as they are
+ ********************
+ Keep the initial !
+ *******************/
+#yo {
+    ma: "ma";
+}
+/*!
+I said
+pre-
+serve! */
+        """
+
+        output = """#yo{ma:"ma"}"""
+
+        from csscompressor import compress
+        res   = compress(input, preserve_exclamation_comments=False)
+        self.assertEqual(res, output)
 
     def test_yui_star_underscore_hacks(self):
         input = """
