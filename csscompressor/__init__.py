@@ -468,6 +468,12 @@ def compress(css, max_linelen=0, preserve_exclamation_comments=True):
         than, say 8000 characters, are checked in. This option is used in
         that case to split long lines after a specific column.
 
+    - preserve_exclamation_comments : boolean = True
+        Some stylesheets contain /*! ... */ comment block which used for copyright
+        notices or else. By default compress dont remove them like other comment
+        blocks. It will lead to bigger file size. but once you decide to remove
+        them just set this parameter to False.
+
     Returns a ``str`` object with compressed CSS.
     """
 
@@ -493,6 +499,10 @@ def compress_partitioned(css,
         When ``max_rules_per_file`` is a positive number, the function *always* returns
         a list of ``str`` objects, each limited to contain less than the passed number
         of rules.
+
+	- preserve_exclamation_comments : boolean = True
+		Has the same meaning as for "compress()" function.
+
 
     Always returns a ``list`` of ``str`` objects with compressed CSS.
     """
