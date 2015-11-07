@@ -6,13 +6,14 @@
 # Author: Isaac Schlueter - http://foohack.com/
 # Author: Stoyan Stefanov - http://phpied.com/
 # Contributor: Dan Beam - http://danbeam.org/
+# Contributor: w.Tayyeb - http://tayyeb.info/
 # Portions Copyright (c) 2011-2013 Yahoo! Inc.  All rights reserved.
 # LICENSE: BSD (revised)
 ##
 
 
 __all__ = ('compress', 'compress_partitioned')
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 
 
 import re
@@ -68,6 +69,8 @@ _trip_0_re = re.compile(r':0 0 0(;|})')
 _coup_0_re = re.compile(r':0 0(;|})')
 
 _point_float_re = re.compile(r'(:|\s)0+\.(\d+)')
+_point_float_neg_re = re.compile(r'(:|\s)-0+\.(\d+)')
+_point_float_pos_re = re.compile(r'(:|\s)\+(\d+)+\.(\d+)')
 
 _border_re = re.compile(r'''(border|border-top|border-right|border-bottom|
                                 border-left|outline|background):none(;|})''', re.I | re.X)
@@ -213,7 +216,7 @@ def _compress_hex_colors(css):
     return ''.join(buf)
 
 
-def _compress(css, max_linelen=0):
+def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
     start_idx = end_idx = 0
     total_len = len(css)
 
@@ -272,7 +275,7 @@ def _compress(css, max_linelen=0):
 
         # ! in the first position of the comment means preserve
         # so push to the preserved tokens while stripping the !
-        if token.startswith('!'):
+        if preserve_exclamation_comments and token.startswith('!'):
             preserved_tokens.append(token)
             css = css.replace(placeholder, '___YUICSSMIN_PRESERVED_TOKEN_{0}___'.
                               format(len(preserved_tokens)-1))
@@ -317,6 +320,9 @@ def _compress(css, max_linelen=0):
         return ('filter:progid:DXImageTransform.Microsoft.Matrix(' +
                 '___YUICSSMIN_PRESERVED_TOKEN_{0}___);'.format(len(preserved_tokens)-1))
     css = _ie_matrix_re.sub(_replace, css)
+
+    # remove + sign where it is before a float +0.1 +2.34 
+    css = _point_float_pos_re.sub(r'\1\2.\3', css)
 
     # Remove the spaces before the things that should not have spaces before them.
     # But, be careful not to turn "p :link {...}" into "p:link{...}"
@@ -388,6 +394,8 @@ def _compress(css, max_linelen=0):
 
     # Replace 0.6 to .6, but only when preceded by : or a white-space
     css = _point_float_re.sub(r'\1.\2', css)
+    # Replace -0.6 to -.6, but only when preceded by : or a white-space
+    css = _point_float_neg_re.sub(r'\1-.\2', css)
 
     css = _compress_rgb_calls(css)
     css = _compress_hex_colors(css)
@@ -447,7 +455,7 @@ def _apply_preserved(css, preserved_tokens):
     return css
 
 
-def compress(css, max_linelen=0):
+def compress(css, max_linelen=0, preserve_exclamation_comments=True):
     """Compress given CSS stylesheet.
 
     Parameters:
@@ -460,17 +468,24 @@ def compress(css, max_linelen=0):
         than, say 8000 characters, are checked in. This option is used in
         that case to split long lines after a specific column.
 
+    - preserve_exclamation_comments : boolean = True
+        Some stylesheets contain /*! ... */ comment block which used for copyright
+        notices or else. By default compress dont remove them like other comment
+        blocks. It will lead to bigger file size. but once you decide to remove
+        them just set this parameter to False.
+
     Returns a ``str`` object with compressed CSS.
     """
 
-    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen, preserve_exclamation_comments=preserve_exclamation_comments)
     css = _apply_preserved(css, preserved_tokens)
     return css
 
 
 def compress_partitioned(css,
                          max_linelen=0,
-                         max_rules_per_file=4000):
+                         max_rules_per_file=4000,
+                         preserve_exclamation_comments=True):
     """Compress given CSS stylesheet into a set of files.
 
     Parameters:
@@ -485,12 +500,16 @@ def compress_partitioned(css,
         a list of ``str`` objects, each limited to contain less than the passed number
         of rules.
 
+	- preserve_exclamation_comments : boolean = True
+		Has the same meaning as for "compress()" function.
+
+
     Always returns a ``list`` of ``str`` objects with compressed CSS.
     """
 
     assert max_rules_per_file > 0
 
-    css, preserved_tokens = _compress(css, max_linelen=max_linelen)
+    css, preserved_tokens = _compress(css, max_linelen=max_linelen, preserve_exclamation_comments=preserve_exclamation_comments)
     css = css.strip()
 
     bufs = []
