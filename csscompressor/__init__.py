@@ -57,8 +57,11 @@ _space_after_re = re.compile(r'([!{}:;>+\(\[,])\s+')
 _semi_re = re.compile(r';+}')
 
 _zero_fmt_spec_re = re.compile(r'''(\s|:|\(|,)(?:0?\.)?0
-                                    (?:px|em|%|in|cm|mm|pc|pt|ex|deg|g?rad|m?s|k?hz)''',
+                                    (?:px|em|%|in|cm|mm|pc|pt|ex|deg|g?rad|k?hz)''',
                                re.I | re.X)
+
+_zero_req_unit_re = re.compile(r'''(\s|:|\(|,)(?:0?\.)?0
+                                    (m?s)''', re.I | re.X)
 
 _bg_pos_re = re.compile(r'''(background-position|webkit-mask-position|transform-origin|
                                 webkit-transform-origin|moz-transform-origin|o-transform-origin|
@@ -382,6 +385,9 @@ def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
 
     # Replace 0(px,em,%) with 0.
     css = _zero_fmt_spec_re.sub(lambda match: match.group(1) + '0', css)
+
+    # Replace 0.0(m,ms) or .0(m,ms) with 0(m,ms)
+    css = _zero_req_unit_re.sub(lambda match: match.group(1) + '0' + match.group(2), css)
 
     # Replace 0 0 0 0; with 0.
     css = _quad_0_re.sub(r':0\1', css)

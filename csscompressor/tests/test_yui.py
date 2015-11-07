@@ -1505,7 +1505,7 @@ serve! */
 
         """
 
-        output = """a{margin:0;_padding-top:0;background-position:0 0;padding:0;transition:opacity 0;transition-delay:0;transform:rotate3d(0,0,0);pitch:0;pitch:0}"""
+        output = """a{margin:0;_padding-top:0;background-position:0 0;padding:0;transition:opacity 0s;transition-delay:0ms;transform:rotate3d(0,0,0);pitch:0;pitch:0}"""
 
         self._test(input, output)
 
