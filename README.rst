@@ -29,7 +29,7 @@ Or, if you want to use it from command line:
 Compatibility
 =============
 
-Tested under Python 2.6, 2.7 and 3.3
+Tested under Python 2.6, 2.7 and 3.3+
 
 
 Installation
