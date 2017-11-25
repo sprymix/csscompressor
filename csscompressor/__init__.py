@@ -113,6 +113,7 @@ def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
     max_idx = len(css) - 1
     append_idx = 0
     sb = []
+    nest_term = None
 
     for match in regexp.finditer(css):
         name = match.group(1)
@@ -121,17 +122,29 @@ def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
         term = match.group(2) if match.lastindex > 1 else None
         if not term:
             term = ')'
+            nest_term = '('
 
         found_term = False
         end_idx = match.end(0) - 1
+        nest_idx = end_idx if nest_term else 0
+        nested = False
         while not found_term and (end_idx + 1) <= max_idx:
+            if nest_term:
+                nest_idx = css.find(nest_term, nest_idx + 1)
             end_idx = css.find(term, end_idx + 1)
 
             if end_idx > 0:
+                if nest_idx > 0 and nest_idx < end_idx and \
+                                css[nest_idx - 1] != '\\':
+                    nested = True
+
                 if css[end_idx - 1] != '\\':
-                    found_term = True
-                    if term != ')':
-                        end_idx = css.find(')', end_idx)
+                    if nested:
+                        nested = False
+                    else:
+                        found_term = True
+                        if term != ')':
+                            end_idx = css.find(')', end_idx)
             else:
                 raise ValueError('malformed css')
 
@@ -139,7 +152,7 @@ def _preserve_call_tokens(css, regexp, preserved_tokens, remove_ws=False):
 
         assert found_term
 
-        token = css[start_idx:end_idx]
+        token = css[start_idx:end_idx].strip()
 
         if remove_ws:
             token = _ws_re.sub('', token)
