@@ -52,3 +52,16 @@ class Tests(unittest.TestCase):
             a {content: calc(10px-10%}
         '''
         self.assertRaises(ValueError, compress, input)
+
+    def test_nested_1(self):
+        input = '''
+            a { width: calc( (10vh - 100px) / 4 + 30px ) }
+        '''
+        output = compress(input)
+        assert output == "a{width:calc((10vh - 100px) / 4 + 30px)}"
+
+    def test_nested_2(self):
+        input = '''
+            a { width: calc( ((10vh - 100px) / 4 + 30px ) }
+        '''
+        self.assertRaises(ValueError, compress, input)
