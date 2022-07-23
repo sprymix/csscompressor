@@ -51,6 +51,7 @@ _common_val_funcs_re = re.compile(r'''([:,\(\s]\s*)(attr|color-stop|from|rgba|to
                                   re.I | re.X)
 
 _space_and_re = re.compile(r'\band\(', re.I)
+_supports_parenthesis_re = re.compile(r'(@supports)([^{]*)', re.I)
 
 _space_after_re = re.compile(r'([!{}:;>+\(\[,])\s+')
 
@@ -389,6 +390,9 @@ def _compress(css, max_linelen=0, preserve_exclamation_comments=True):
     # Put the space back in some cases, to support stuff like
     # @media screen and (-webkit-min-device-pixel-ratio:0){
     css = _space_and_re.sub('and (', css)
+
+    # Put the parenthesis back on @supports directive
+    css = _supports_parenthesis_re.sub(lambda match: match.group(1) + '(' + match.group(2) + ')', css)
 
     # Remove the spaces after the things that should not have spaces after them.
     css = _space_after_re.sub(r'\1', css)

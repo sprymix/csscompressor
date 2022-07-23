@@ -10,6 +10,18 @@ from csscompressor.tests.base import BaseTest
 
 
 class Tests(BaseTest):
+    def test_supports_directive(self):
+        input = '''
+            @supports (aspect-ratio: 16/9) {
+                vertical-align: bottom;
+            }
+        '''
+
+        output = '''@supports(aspect-ratio:16/9){vertical-align:bottom}'''
+
+        self._test(input, output)
+
+
     def test_issue_108(self):
         # https://github.com/yui/yuicompressor/issues/108
 
