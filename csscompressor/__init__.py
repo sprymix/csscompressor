@@ -66,7 +66,7 @@ _zero_req_unit_re = re.compile(r'''(\s|:|\(|,)(?:0?\.)?0
 
 _bg_pos_re = re.compile(r'''(background-position|webkit-mask-position|transform-origin|
                                 webkit-transform-origin|moz-transform-origin|o-transform-origin|
-                                ms-transform-origin):0(;|})''', re.I | re.X)
+                                ms-transform-origin|object-position):0(;|})''', re.I | re.X)
 
 _quad_0_re = re.compile(r':0 0 0 0(;|})')
 _trip_0_re = re.compile(r':0 0 0(;|})')
